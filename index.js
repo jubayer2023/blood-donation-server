@@ -3,7 +3,7 @@ const app = express();
 require('dotenv').config();
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 const morgan = require('morgan');
 const port = process.env.PORT || 5000;
@@ -48,6 +48,12 @@ const client = new MongoClient(uri, {
 })
 async function run() {
   try {
+
+    // database and collection
+    const database = client.db("bloodDonationDB");
+    const requestsCollection = database.collection('donationRequests');
+
+
     // auth related api
     app.post('/jwt', async (req, res) => {
       const user = req.body
@@ -62,7 +68,7 @@ async function run() {
           sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
         })
         .send({ success: true })
-    })
+    });
 
     // Logout
     app.get('/logout', async (req, res) => {
@@ -78,7 +84,7 @@ async function run() {
       } catch (err) {
         res.status(500).send(err)
       }
-    })
+    });
 
     // Save or modify user email, status in DB
     app.put('/users/:email', async (req, res) => {
@@ -97,7 +103,21 @@ async function run() {
         options
       )
       res.send(result)
-    })
+    });
+
+    // get all request
+    app.get('/requests', async (req, res) => {
+      const result = await requestsCollection.find().toArray();
+      res.send(result);
+    });
+    // get single request
+    app.get('/request-details/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await requestsCollection.findOne(query);
+      res.send(result);
+    });
+
 
     // Send a ping to confirm a successful connection
     await client.db('admin').command({ ping: 1 })
