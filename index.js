@@ -21,8 +21,8 @@ app.use(morgan('dev'))
 
 
 const verifyToken = async (req, res, next) => {
-  const token = req.cookies?.token
-  console.log(token)
+  const token = req.cookies?.token;
+  console.log(token);
   if (!token) {
     return res.status(401).send({ message: 'unauthorized access' })
   }
@@ -104,6 +104,19 @@ async function run() {
         options
       );
       res.send(result);
+    });
+
+    // get role of user
+    app.get('/role/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const isExist = await usersCollection.findOne(query);
+      if (!isExist) {
+        res.status(401).send({ message: 'unauthorized access' });
+      } else {
+        return res.send(isExist.role);
+      };
+
     });
 
 
