@@ -112,7 +112,7 @@ async function run() {
       const query = { email: email };
       const isExist = await usersCollection.findOne(query);
       if (!isExist) {
-        res.status(401).send({ message: 'unauthorized access' });
+        return res.status(401).send({ message: 'unauthorized access' });
       } else {
         return res.send(isExist.role);
       };
