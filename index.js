@@ -135,6 +135,21 @@ async function run() {
       res.send(result);
     });
 
+    // get requests by email
+    app.get('/requests/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { recipient_email: email };
+      const result = await requestsCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // post requestcollection
+    app.post('/requests', verifyToken, async (req, res) => {
+      const requestData = req.body;
+      const result = await requestsCollection.insertOne(requestData);
+      res.send(result);
+    })
+
 
     // Send a ping to confirm a successful connection
     await client.db('admin').command({ ping: 1 })
