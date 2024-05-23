@@ -51,7 +51,7 @@ async function run() {
 
     // database and collection
     const database = client.db("bloodDonationDB");
-    const requestsCollection = database.collection('donationRequests');
+    const requestsCollection = database.collection('requests');
     const usersCollection = database.collection('users');
 
 
@@ -60,7 +60,7 @@ async function run() {
       const user = req.body
       console.log('I need a new jwt', user)
       const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
-        expiresIn: '365d',
+        expiresIn: '365h',
       })
       res
         .cookie('token', token, {
@@ -146,9 +146,40 @@ async function run() {
     // post requestcollection
     app.post('/requests', verifyToken, async (req, res) => {
       const requestData = req.body;
-      const result = await requestsCollection.insertOne(requestData);
+      const postData = {
+        ...requestData,
+        post_date: Date.now(),
+      }
+      const result = await requestsCollection.insertOne(postData);
       res.send(result);
     })
+
+    // update request status
+    app.put('/requests/:id', verifyToken, async (req, res) => {
+      const { status } = req.body;
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+
+      const updateDoc = {
+        $set: {
+          donation_status: status,
+        }
+      }
+
+      const result = await requestsCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+    });
+
+
+    // delete request
+    app.delete('/requests/:id', verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await requestsCollection.deleteOne(query);
+      res.send(result);
+    })
+
 
 
     // Send a ping to confirm a successful connection
