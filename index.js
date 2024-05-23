@@ -127,6 +127,13 @@ async function run() {
       const result = await requestsCollection.find().toArray();
       res.send(result);
     });
+
+    // get recent three requests
+    app.get('/recent-requests', async (req, res) => {
+      const result = await requestsCollection.find().sort({ post_date: -1 }).limit(3).toArray();
+      res.send(result);
+    })
+
     // get single request
     app.get('/request/:id', async (req, res) => {
       const id = req.params.id;
