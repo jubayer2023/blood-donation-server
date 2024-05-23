@@ -128,7 +128,7 @@ async function run() {
       res.send(result);
     });
     // get single request
-    app.get('/request-details/:id', async (req, res) => {
+    app.get('/request/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
       const result = await requestsCollection.findOne(query);
@@ -165,6 +165,22 @@ async function run() {
         $set: {
           donation_status: status,
         }
+      }
+
+      const result = await requestsCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+    });
+
+    // update request data
+    app.put('/request-up/:id', verifyToken, async (req, res) => {
+      const updateData = req.body;
+      const id = req.params.id;
+      // console.log(updateData);
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+
+      const updateDoc = {
+        $set: { ...updateData }
       }
 
       const result = await requestsCollection.updateOne(query, updateDoc, options);
