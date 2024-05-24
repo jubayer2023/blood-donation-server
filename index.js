@@ -31,10 +31,12 @@ const verifyToken = async (req, res, next) => {
       console.log(err)
       return res.status(401).send({ message: 'unauthorized access' })
     }
-    req.user = decoded
-    next()
+    req.user = decoded;
+    next();
   })
 }
+
+
 
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.of0ix0q.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -54,6 +56,32 @@ async function run() {
     // collection
     const usersCollection = database.collection('users');
     const requestsCollection = database.collection('requests');
+
+
+    // verify admin
+    const verifyAdmin = async (req, res, next) => {
+      const userEmail = req.user?.email;
+      const isExist = await usersCollection.findOne({ email: userEmail });
+      if (!isExist || isExist?.role !== 'admin') {
+        return res.status(401).send({ message: 'Access denied' })
+      }
+      else {
+        next();
+      }
+    };
+
+    // verify volunteer
+    // verify admin
+    const verifyVolunteer = async (req, res, next) => {
+      const userEmail = req.user?.email;
+      const isExist = await usersCollection.findOne({ email: userEmail });
+      if (!isExist || isExist?.role !== 'volunteer') {
+        return res.status(401).send({ message: 'Access denied' })
+      }
+      else {
+        next();
+      };
+    };
 
 
     // auth related api
@@ -237,6 +265,16 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await requestsCollection.deleteOne(query);
+      res.send(result);
+    })
+
+
+
+    // admin related api's
+
+    // getAllUsers
+    app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
+      const result = await usersCollection.find().toArray();
       res.send(result);
     })
 
