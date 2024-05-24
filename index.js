@@ -122,15 +122,37 @@ async function run() {
 
 
 
+    // get pending count
+    app.get('/pending-count', async (req, res) => {
+
+      const query = { donation_status: 'pending' };
+      const count = await requestsCollection.countDocuments(query);
+      res.send({ count });
+    })
+
     // get all request
     app.get('/requests', async (req, res) => {
-      const result = await requestsCollection.find().toArray();
+      const { size, currentPage } = req.query;
+      console.log(typeof (size), typeof (size));
+      const sizeInNumber = parseInt(size);
+      const currentPageInNumber = parseInt(currentPage);
+
+      const skipSize = (currentPageInNumber - 1) * sizeInNumber;
+      const query = { donation_status: 'pending' };
+      const result = await requestsCollection.find(query)
+        .skip(skipSize)
+        .limit(sizeInNumber)
+        .toArray();
       res.send(result);
     });
 
+
     // get recent three requests
-    app.get('/recent-requests', async (req, res) => {
-      const result = await requestsCollection.find().sort({ post_date: -1 }).limit(3).toArray();
+    app.get('/recent-requests/:email', async (req, res) => {
+      const email = req.params.email;
+      const query = { recipient_email: email };
+      console.log(query)
+      const result = await requestsCollection.find(query).sort({ post_date: -1 }).limit(3).toArray();
       res.send(result);
     })
 
