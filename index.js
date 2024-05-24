@@ -49,10 +49,11 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
 
-    // database and collection
+    // database
     const database = client.db("bloodDonationDB");
-    const requestsCollection = database.collection('requests');
+    // collection
     const usersCollection = database.collection('users');
+    const requestsCollection = database.collection('requests');
 
 
     // auth related api
@@ -133,7 +134,7 @@ async function run() {
     // get all request
     app.get('/requests', async (req, res) => {
       const { size, currentPage } = req.query;
-      console.log(typeof (size), typeof (size));
+      // console.log(typeof (size), typeof (size));
       const sizeInNumber = parseInt(size);
       const currentPageInNumber = parseInt(currentPage);
 
@@ -146,9 +147,23 @@ async function run() {
       res.send(result);
     });
 
+    // get searh data
+    app.get('/search-requests', async (req, res) => {
+      const searchData = req.query;
+      const query = {
+        recipient_district: searchData?.district,
+        recipient_upazila: searchData?.upazila,
+        blood_group: searchData?.blood_group,
+      };
+      // console.log(query);
+
+      const result = await requestsCollection.find(query).toArray();
+      res.send(result);
+    })
+
 
     // get recent three requests
-    app.get('/recent-requests/:email', async (req, res) => {
+    app.get('/recent-requests/:email', verifyToken, async (req, res) => {
       const email = req.params.email;
       const query = { recipient_email: email };
       console.log(query)
