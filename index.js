@@ -272,11 +272,26 @@ async function run() {
 
     // admin related api's
 
+    // get user count
+    app.get('/user/count', async (req, res) => {
+      const count = await usersCollection.countDocuments();
+      res.send({ count })
+    })
+
     // getAllUsers
     app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
-      const result = await usersCollection.find().toArray();
+      const { size, currentPage } = req.query;
+      // console.log(typeof (size), typeof (size));
+      const sizeInNumber = parseInt(size);
+      const currentPageInNumber = parseInt(currentPage);
+      const skipSize = (currentPageInNumber - 1) * sizeInNumber;
+      const result = await usersCollection.find()
+        .skip(skipSize)
+        .limit(sizeInNumber)
+        .toArray();
       res.send(result);
     })
+
 
 
 
