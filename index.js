@@ -175,17 +175,23 @@ async function run() {
       res.send(result);
     });
 
+    // getUsers public
+    app.get('/users', async (req, res) => {
+      const users = await usersCollection.find().sort({ timestamp: -1 }).limit(3).toArray();
+      res.send(users)
+    })
+
     // get searh data
-    app.get('/search-requests', async (req, res) => {
+    app.get('/search-donors', async (req, res) => {
       const searchData = req.query;
       const query = {
-        recipient_district: searchData?.district,
-        recipient_upazila: searchData?.upazila,
+        district: searchData?.district,
+        upazila: searchData?.upazila,
         blood_group: searchData?.blood_group,
       };
       // console.log(query);
 
-      const result = await requestsCollection.find(query).toArray();
+      const result = await usersCollection.find(query).toArray();
       res.send(result);
     })
 
@@ -290,6 +296,48 @@ async function run() {
         .limit(sizeInNumber)
         .toArray();
       res.send(result);
+    })
+
+    // update user role and status
+    app.put('/user/role/:id', async (req, res) => {
+      const id = req.params?.id;
+      const query = { _id: new ObjectId(id) };
+      const { role } = req.body;
+      // console.log("role", role);
+      if (!role) {
+        return res.send({ message: "no role found" })
+      }
+      const options = { upsert: true };
+      const updateData = {
+        $set: {
+          role: role,
+        }
+      };
+
+      const result = await usersCollection.updateOne(query, updateData, options);
+      res.send(result);
+
+    })
+
+    // update user status and status
+    app.put('/user/status/:id', async (req, res) => {
+      const id = req.params?.id;
+      const query = { _id: new ObjectId(id) };
+      const { status } = req.body;
+      // console.log("status", status);
+      if (!status) {
+        return res.send({ message: "no status found" })
+      }
+      const options = { upsert: true };
+      const updateData = {
+        $set: {
+          status: status,
+        }
+      };
+
+      const result = await usersCollection.updateOne(query, updateData, options);
+      res.send(result);
+
     })
 
 
