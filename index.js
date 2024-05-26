@@ -22,7 +22,7 @@ app.use(morgan('dev'))
 
 const verifyToken = async (req, res, next) => {
   const token = req.cookies?.token;
-  console.log(token);
+  console.log("token from verify", token);
   if (!token) {
     return res.status(401).send({ message: 'unauthorized access' })
   }
@@ -77,6 +77,7 @@ async function run() {
     const verifyVolunteer = async (req, res, next) => {
       const userEmail = req.user?.email;
       const isExist = await usersCollection.findOne({ email: userEmail });
+      
       if (!isExist || isExist?.role !== 'volunteer') {
         return res.status(401).send({ message: 'Access denied' })
       }
@@ -343,7 +344,7 @@ async function run() {
     })
 
     // get all blood donation requests
-    app.get('/all-requests', verifyToken, verifyAdmin, async (req, res) => {
+    app.get('/requests-admin', verifyToken,  async (req, res) => {
       const result = await requestsCollection.find().toArray();
       res.send(result);
     })
@@ -364,6 +365,13 @@ async function run() {
       res.send(result);
     })
 
+    // volunteer api
+
+    // get all requests by volunteer
+    app.get('/requests-volunteer',verifyToken, async (req, res) => {
+      const result = await requestsCollection.find().toArray();
+      res.send(result);
+    })
 
 
 
