@@ -56,6 +56,8 @@ async function run() {
     // collection
     const usersCollection = database.collection('users');
     const requestsCollection = database.collection('requests');
+    const blogsCollection = database.collection('blogs');
+
 
 
     // verify admin
@@ -299,7 +301,7 @@ async function run() {
     })
 
     // update user role and status
-    app.put('/user/role/:id', async (req, res) => {
+    app.put('/user/role/:id', verifyToken, verifyToken, async (req, res) => {
       const id = req.params?.id;
       const query = { _id: new ObjectId(id) };
       const { role } = req.body;
@@ -343,6 +345,22 @@ async function run() {
     // get all blood donation requests
     app.get('/all-requests', verifyToken, verifyAdmin, async (req, res) => {
       const result = await requestsCollection.find().toArray();
+      res.send(result);
+    })
+
+    // create blog content
+    app.post('/blog-content', verifyToken, verifyAdmin, async (req, res) => {
+      const blog = req.body;
+      const result = await blogsCollection.insertOne(blog);
+      res.send(result);
+    });
+
+    // get blog data
+    app.get('/blog-content', async (req, res) => {
+      const result = await blogsCollection.find().toArray();
+      if (!result) {
+        return res.send([]);
+      }
       res.send(result);
     })
 
