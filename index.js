@@ -176,7 +176,7 @@ async function run() {
     });
 
     // getUsers public
-    app.get('/users', async (req, res) => {
+    app.get('/three-donor', async (req, res) => {
       const users = await usersCollection.find().sort({ timestamp: -1 }).limit(3).toArray();
       res.send(users)
     })
@@ -320,7 +320,7 @@ async function run() {
     })
 
     // update user status and status
-    app.put('/user/status/:id', async (req, res) => {
+    app.put('/user/status/:id', verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params?.id;
       const query = { _id: new ObjectId(id) };
       const { status } = req.body;
@@ -338,6 +338,12 @@ async function run() {
       const result = await usersCollection.updateOne(query, updateData, options);
       res.send(result);
 
+    })
+
+    // get all blood donation requests
+    app.get('/all-requests', verifyToken, verifyAdmin, async (req, res) => {
+      const result = await requestsCollection.find().toArray();
+      res.send(result);
     })
 
 
