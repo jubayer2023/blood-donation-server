@@ -344,20 +344,20 @@ async function run() {
     })
 
     // get all blood donation requests
-    app.get('/requests-admin', verifyToken,  async (req, res) => {
+    app.get('/requests-admin', verifyToken,verifyAdmin,  async (req, res) => {
       const result = await requestsCollection.find().toArray();
       res.send(result);
     })
 
     // create blog content
-    app.post('/blog-content', verifyToken, verifyAdmin, async (req, res) => {
+    app.post('/blog-content', verifyToken, async (req, res) => {
       const blog = req.body;
       const result = await blogsCollection.insertOne(blog);
       res.send(result);
     });
 
     // get blog data
-    app.get('/blog-content', async (req, res) => {
+    app.get('/blog-content',verifyToken, async (req, res) => {
       const result = await blogsCollection.find().toArray();
       if (!result) {
         return res.send([]);
@@ -365,13 +365,33 @@ async function run() {
       res.send(result);
     })
 
+
+
     // volunteer api
 
     // get all requests by volunteer
-    app.get('/requests-volunteer',verifyToken, async (req, res) => {
+    app.get('/requests-volunteer',verifyToken, verifyVolunteer, async (req, res) => {
       const result = await requestsCollection.find().toArray();
       res.send(result);
     })
+
+
+    // volun-donation-status-update
+    app.put('/volun-donation-status/:id', verifyToken, verifyVolunteer, async (req, res) => {
+      const { status } = req.body;
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+
+      const updateDoc = {
+        $set: {
+          donation_status: status,
+        }
+      }
+
+      const result = await requestsCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+    });
 
 
 
