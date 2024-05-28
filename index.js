@@ -77,7 +77,7 @@ async function run() {
     const verifyVolunteer = async (req, res, next) => {
       const userEmail = req.user?.email;
       const isExist = await usersCollection.findOne({ email: userEmail });
-      
+
       if (!isExist || isExist?.role !== 'volunteer') {
         return res.status(401).send({ message: 'Access denied' })
       }
@@ -344,7 +344,7 @@ async function run() {
     })
 
     // get all blood donation requests
-    app.get('/requests-admin', verifyToken,verifyAdmin,  async (req, res) => {
+    app.get('/requests-admin', verifyToken, verifyAdmin, async (req, res) => {
       const result = await requestsCollection.find().toArray();
       res.send(result);
     })
@@ -357,7 +357,7 @@ async function run() {
     });
 
     // get blog data
-    app.get('/blog-content',verifyToken, async (req, res) => {
+    app.get('/blog-content', verifyToken, async (req, res) => {
       const result = await blogsCollection.find().toArray();
       if (!result) {
         return res.send([]);
@@ -365,12 +365,43 @@ async function run() {
       res.send(result);
     })
 
+    // update blog status
+    app.put('/blogs/:id', verifyToken, verifyAdmin, async (req, res) => {
+      const { status } = req.body;
+      console.log("status", status);
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
 
+      const updateDoc = {
+        $set: {
+          status: status,
+        }
+      }
+
+      const result = await blogsCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    });
+
+    // delete blog
+    app.delete('/blogs/:id', verifyToken, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await blogsCollection.deleteOne(filter);
+      res.send(result);
+    })
+
+    // get published blogs
+    app.get('/published-blogs', async (req, res) => {
+      const query = { status: 'published' };
+      const result = await blogsCollection.find(query).toArray();
+      res.send(result);
+    })
 
     // volunteer api
 
     // get all requests by volunteer
-    app.get('/requests-volunteer',verifyToken, verifyVolunteer, async (req, res) => {
+    app.get('/requests-volunteer', verifyToken, verifyVolunteer, async (req, res) => {
       const result = await requestsCollection.find().toArray();
       res.send(result);
     })
