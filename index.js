@@ -7,6 +7,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 const morgan = require('morgan');
 const port = process.env.PORT || 5000;
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // middleware
 const corsOptions = {
@@ -57,6 +58,7 @@ async function run() {
     const usersCollection = database.collection('users');
     const requestsCollection = database.collection('requests');
     const blogsCollection = database.collection('blogs');
+    const paymentCollection = database.collection('payment');
 
 
 
@@ -398,6 +400,8 @@ async function run() {
       res.send(result);
     })
 
+
+
     // volunteer api
 
     // get all requests by volunteer
@@ -423,6 +427,45 @@ async function run() {
       const result = await requestsCollection.updateOne(query, updateDoc, options);
       res.send(result);
     });
+
+
+
+
+
+
+
+
+
+    // payment 
+    app.post('/create-payment-intent', verifyToken, async (req, res) => {
+      const { price } = req?.body;
+      const amount = parseInt(price) * 100;
+      if (!price || amount < 1) {
+        return;
+      }
+      const { client_secret } = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: 'usd',
+        payment_method_types: ['card'],
+      });
+      res.send({ clientSecret: client_secret })
+    })
+
+
+    // save payment info in database
+    app.post('/payments', verifyToken, async (req, res) => {
+      const data = req.body;
+      const result = await paymentCollection.insertOne(data);
+      res.send(result);
+    });
+
+    // get payyment data
+    app.get('/payments/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    })
 
 
 
