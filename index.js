@@ -511,6 +511,55 @@ async function run() {
     })
 
 
+    // volunteer stats
+    app.get('/volunteer-stats', verifyToken, verifyVolunteer, async (req, res) => {
+      const pendingQuery = { donation_status: 'pending' };
+      const inprogressQuery = { donation_status: 'inprogress' };
+      const doneQuery = { donation_status: 'done' };
+      const cancelledQuery = { donation_status: 'cancelled' };
+      try {
+        const paymentsDetails = await paymentCollection.find({}, { projection: { date: 1, amount: 1 } }).toArray();
+        const totalUsers = await usersCollection.countDocuments();
+        const totalRequests = await requestsCollection.countDocuments();
+        const totalFunds = paymentsDetails.reduce((sum, data) => sum + parseInt(data.amount), 0);
+
+        const pendinsCount = await requestsCollection.countDocuments(pendingQuery);
+        const inprogressCount = await requestsCollection.countDocuments(inprogressQuery);
+        const doneCount = await requestsCollection.countDocuments(doneQuery);
+        const cancelledCount = await requestsCollection.countDocuments(cancelledQuery);
+
+        const pieChartData = [
+          { name: 'Pendings', value: parseInt(pendinsCount) },
+          { name: 'Inprogress', value: parseInt(inprogressCount) },
+          { name: 'Done', value: parseInt(doneCount) },
+          { name: 'Cancelled', value: parseInt(cancelledCount) },
+        ]
+
+        const chartData = paymentsDetails.map(data => {
+          const day = new Date(data.date).getDate();
+          const month = new Date(data.date).getMonth() + 1;
+          return [day + '/' + month, parseFloat(data.amount)]
+        });
+
+        chartData.unshift(['Day', 'Funds']);
+
+
+
+        res.send({ totalUsers, totalRequests, totalFunds, chartData, pieChartData })
+      }
+      catch (err) {
+        console.log('Error from server');
+        res.send({ message: err.message });
+      }
+    });
+
+
+
+
+
+
+
+
     // Send a ping to confirm a successful connection
     await client.db('admin').command({ ping: 1 })
     console.log(
