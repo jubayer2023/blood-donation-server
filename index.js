@@ -153,6 +153,40 @@ async function run() {
 
     });
 
+    // get single user info
+    app.get('/users/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await usersCollection.findOne(query);
+      res.send(result);
+    })
+
+    // get singleUser by id
+    app.get('/users-detail/:id', verifyToken, async (req, res) => {
+      const id = req.params.id;
+      // console.log("id ======>", id);
+      const query = { _id: new ObjectId(id) };
+      const result = await usersCollection.findOne(query);
+      res.send(result);
+    })
+
+    // update user data
+    app.put('/update-user/:id', verifyToken, async (req, res) => {
+      const newData = req.body;
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+
+      const updateDoc = {
+        $set: {
+          ...newData,
+        }
+      }
+
+      const result = await usersCollection.updateOne(query, updateDoc, options);
+      res.send(result);
+    })
+
 
 
 
