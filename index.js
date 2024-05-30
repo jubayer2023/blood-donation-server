@@ -12,10 +12,9 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 // middleware
 const corsOptions = {
   origin: [
-    // 'http://localhost:5173',
+    'http://localhost:5173',
     // 'http://localhost:5174',
-    'https://blood-donation-site-6f47a.firebaseapp.com',
-    'https://blood-donation-site-6f47a.web.app',
+    'https://blood-donation-site-6f47a.web.app'
   ],
   credentials: true,
   optionSuccessStatus: 200,
